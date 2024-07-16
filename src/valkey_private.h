@@ -122,4 +122,6 @@ static inline int valkeyContextUpdateCommandTimeout(valkeyContext *c,
     return VALKEY_OK;
 }
 
+void valkeyContextSetDefaultFuncs(valkeyContext *c);
+
 #endif  /* VALKEY_VK_PRIVATE_H */

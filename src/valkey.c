@@ -42,17 +42,7 @@
 #include "valkey_private.h"
 #include "net.h"
 #include "sds.h"
-#include "async.h"
 #include "win32.h"
-
-static valkeyContextFuncs valkeyContextDefaultFuncs = {
-    .close = valkeyNetClose,
-    .free_privctx = NULL,
-    .async_read = valkeyAsyncRead,
-    .async_write = valkeyAsyncWrite,
-    .read = valkeyNetRead,
-    .write = valkeyNetWrite
-};
 
 static valkeyReply *createReplyObject(int type);
 static void *createStringObject(const valkeyReadTask *task, char *str, size_t len);
@@ -718,7 +708,7 @@ static valkeyContext *valkeyContextInit(void) {
     if (c == NULL)
         return NULL;
 
-    c->funcs = &valkeyContextDefaultFuncs;
+    valkeyContextSetDefaultFuncs(c);
 
     c->obuf = sdsempty();
     c->reader = valkeyReaderCreate();

@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "async.h"
 #include "net.h"
 #include "sds.h"
 #include "sockcompat.h"
@@ -56,7 +57,7 @@ void valkeyNetClose(valkeyContext *c) {
     }
 }
 
-ssize_t valkeyNetRead(valkeyContext *c, char *buf, size_t bufcap) {
+static ssize_t valkeyNetRead(valkeyContext *c, char *buf, size_t bufcap) {
     ssize_t nread = recv(c->fd, buf, bufcap, 0);
     if (nread == -1) {
         if ((errno == EWOULDBLOCK && !(c->flags & VALKEY_BLOCK)) || (errno == EINTR)) {
@@ -78,7 +79,7 @@ ssize_t valkeyNetRead(valkeyContext *c, char *buf, size_t bufcap) {
     }
 }
 
-ssize_t valkeyNetWrite(valkeyContext *c) {
+static ssize_t valkeyNetWrite(valkeyContext *c) {
     ssize_t nwritten;
 
     nwritten = send(c->fd, c->obuf, sdslen(c->obuf), 0);
@@ -629,4 +630,17 @@ int valkeyContextConnectUnix(valkeyContext *c, const char *path, const struct ti
 oom:
     valkeySetError(c, VALKEY_ERR_OOM, "Out of memory");
     return VALKEY_ERR;
+}
+
+static valkeyContextFuncs valkeyContextDefaultFuncs = {
+    .close = valkeyNetClose,
+    .free_privctx = NULL,
+    .async_read = valkeyAsyncRead,
+    .async_write = valkeyAsyncWrite,
+    .read = valkeyNetRead,
+    .write = valkeyNetWrite
+};
+
+void valkeyContextSetDefaultFuncs(valkeyContext *c) {
+    c->funcs = &valkeyContextDefaultFuncs;
 }

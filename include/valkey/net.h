@@ -38,8 +38,6 @@
 #include "valkey.h"
 
 void valkeyNetClose(valkeyContext *c);
-ssize_t valkeyNetRead(valkeyContext *c, char *buf, size_t bufcap);
-ssize_t valkeyNetWrite(valkeyContext *c);
 
 int valkeyCheckSocketError(valkeyContext *c);
 int valkeyContextSetTimeout(valkeyContext *c, const struct timeval tv);
