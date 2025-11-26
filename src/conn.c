@@ -31,6 +31,7 @@
 #include "valkey_private.h"
 
 #include <assert.h>
+#include <pthread.h>
 
 static valkeyContextFuncs *valkeyContextFuncsArray[VALKEY_CONN_MAX];
 
@@ -44,13 +45,20 @@ int valkeyContextRegisterFuncs(valkeyContextFuncs *funcs, enum valkeyConnectionT
 
 void valkeyContextSetFuncs(valkeyContext *c) {
     static int initialized;
+    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-    if (!initialized) {
+    pthread_mutex_lock(&lock);
+    do {
+        if (initialized) {
+            break;
+        }
+
         initialized = 1;
         valkeyContextRegisterTcpFuncs();
         valkeyContextRegisterUnixFuncs();
         valkeyContextRegisterUserfdFuncs();
-    }
+    } while (0);
+    pthread_mutex_unlock(&lock);
 
     assert(c->connection_type < VALKEY_CONN_MAX);
     assert(!c->funcs);
